@@ -1,0 +1,144 @@
+select * from eventmanagement;
+
+---- Date Practice
+
+-- • 1. Retrieve the current system date, time, and timestamp.
+select current_date, current_time, current_timestamp
+
+-- 2. Retrieve the year, month, and day from the StartDate of each event.
+select extract(year from startdate), extract(month from startdate), extract(day from startdate)
+from eventmanagement;
+
+-- 3. Get the day name, month name, and year from a Date
+select to_char(current_date, 'day') as day_name, 
+to_char(current_date, 'month') as month_name,
+extract(year from current_date);
+
+-- 4. Calculate how many days are left until the registration deadline for each event.
+select (startdate-registrationdeadline) as days_left 
+from eventmanagement;
+
+-- 5.Retrieve events where the RegistrationDeadline has already passed.
+select eventname 
+from eventmanagement
+where current_date > registrationdeadline;
+
+-- 6. Find the registration deadlines extended by 5 days
+select date_trunc('day',registrationdeadline) + interval '5 days' as extend
+from eventmanagement;
+
+-- 7. Date Difference: Calculate the total time (in days and hours) between the StartDate
+-- and EndDate for each event.
+select eventname, (enddate-startdate) as total_days, (enddate-startdate)*24 as total_hours
+from eventmanagement;
+
+-- 8. Find the day of the week for the StartDate of each event.
+select eventname, extract(dow from startdate)
+from eventmanagement;
+
+-- 9. Convert a string 2024-12-15 to a date and calculate how many days it is from today.
+select to_date('2024-12-15','YYYY-MM-DD') as given_date, 
+current_date - to_date('2024-12-15','YYYY-MM-DD') as days;
+
+-- • 10. Format the StartDate in DD-MM-YYYY format for display purposes.
+select to_char(startdate,'DD-MM-YYY') as display_date
+from eventmanagement;
+
+-- 11. Retrieve events that will take place in December 2024.
+select eventname
+from eventmanagement
+where extract(year from startdate)=2024 and extract(month from startdate) = 12;
+
+-- 12. Find the total number of registrations for events happening in the same month.
+select sum(totalregistrations) as total_registration, extract(month from registrationdeadline) as month_number
+from eventmanagement
+group by extract(month from registrationdeadline)
+order by month_number asc;
+
+
+---- SQL Practice
+select * from loan_payments;
+-- 1. Calculate the total payments made in each quarter of 2024 and determine the percentage
+-- contribution of each quarter to the yearly total.
+select 
+case 
+when extract(month from payment_date) in (1,2,3) then 'Q1 - 2024'
+when extract(month from payment_date) in (4,5,6) then 'Q2 - 2024'
+when extract(month from payment_date) in (7,8,9) then 'Q3 - 2024'
+else 'Q4 - 2024'
+end as quarter,
+sum(payment_amount) as total_payments,
+(sum(payment_amount)*100)/(select sum(payment_amount) from loan_payments) as percent_contribution
+from loan_payments
+group by quarter;
+
+
+select * from loan_payments;
+--2. Calculate the total payment amount for each month in the year 2024. Classify the payment totals
+-- into three categories:
+-- 1.Low: If the total payment amount is less than ₹2000.
+-- 2.Moderate: If the total payment amount is between ₹2000 and ₹2500.
+-- 3.High: If the total payment amount is greater than ₹2500.
+
+--Your query should group the data by month and display the following columns:
+-- 1.Month start date.
+-- 2.Total payment amount.
+-- 3.Payment category (Low, Moderate, High).
+-- 4. Month Label
+select 
+case 
+when extract(month from payment_date)=1 then 'Jan'
+when extract(month from payment_date)=2 then 'Feb'
+when extract(month from payment_date)=3 then 'Mar'
+when extract(month from payment_date)=4 then 'Apr'
+when extract(month from payment_date)=5 then 'May'
+when extract(month from payment_date)=6 then 'Jun'
+when extract(month from payment_date)=7 then 'Jul'
+when extract(month from payment_date)=8 then 'Aug'
+when extract(month from payment_date)=9 then 'Sep'
+when extract(month from payment_date)=10 then 'Oct'
+when extract(month from payment_date)=11 then 'Nov'
+when extract(month from payment_date)=12 then 'Dec'
+end as month_label,
+
+case 
+when sum(payment_amount)<2000 then 'Low'
+when sum(payment_amount) between 2000 and 2500 then 'Moderate'
+else 'High'
+end as payment_totals,
+date_trunc('month', payment_date) as month_start,
+sum(payment_amount) as total_amount
+from loan_payments
+group by month_label, date_trunc('month', payment_date);
+
+
+
+select * from loan_payments;
+-- 3. Calculate and compare the total sales made during the first 5 days and the last 5 days of each month
+-- in 2024. The output should include:
+-- 1.Month start date.
+-- 2.Total sales for the first 5 days.
+-- 3.Total sales for the last 5 days.
+-- 4.Indicate whether the first 5 days' sales were higher, lower, or equal to the last 5 days' sales.
+
+select 
+case 
+when payment_date between 
+	date_trunc('month',payment_date) and date_trunc('month',payment_date) + interval '4 days' then 'first 5 days'
+when payment_date between
+	date_trunc('month',payment_date) + interval '1 month' - interval '5 days' and
+		date_trunc('month',payment_date) + interval '1 month' - interval '1 day' then 'last 5 days'
+end as five_days,
+sum(payment_amount) as total_sales
+from loan_payments
+group by five_days;
+
+
+-- doubt - (not able to do the frouping for sales amount)
+
+
+select date_trunc('month',payment_date) + interval '1 month' - interval '5 days' 
+from loan_payments
+
+
+
